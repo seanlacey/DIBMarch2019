@@ -1,0 +1,119 @@
+---
+output:
+  html_document:
+    css: style.css
+    self_contained: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(plotly)
+library(dplyr)
+library(magrittr)
+```
+
+<div id="mytitle">Windiest<sup>1</sup> U.S. State or Territory</div>
+
+```{r wplot, echo=FALSE}
+pdata <- read.csv("data/wind_mean_med_state.csv")
+statename <- read.csv("data/state_names.csv")
+
+df <- inner_join(pdata,statename,by="State") %>%
+      arrange(med.ws)
+    
+    y.axis <- list(categoryorder = "array",
+                   categoryarray = df$StateFull,
+                   mirror = TRUE,
+                   range=(c(42.5,52.5)),
+                   showgrid=FALSE,
+                   showline=TRUE,
+                   side='left',
+                   tickfont=list(size=16),
+                   title="")
+
+    x.axis <- list(mirror=TRUE,
+                   fixedrange=TRUE,
+                   showgrid=FALSE,
+                   showline=TRUE,
+                   tickfont=list(size=16),
+                   title="Wind Speed (m/s)",
+                   titlefont=list(size=16))
+    
+    lgd <- list(orientation='h',
+                x=1,
+                xanchor='right',
+                y=-0.05,
+                yanchor='top')
+  
+    p <- plot_ly(width = 1000,
+                 height = 600)
+    
+    p <-add_trace(p,
+                  data = df, 
+                  y = ~StateFull, 
+                  x = ~med.ws,
+                  type="bar",
+                  marker = list(color = '#2176AE'),
+                  orientation='h',
+                  name="Median",
+                  hoverinfo="text",
+                  hoverlabel= list(bgcolor="#FFFFFF",
+                                   font=list(color="#000000")),
+                  text=~paste0(StateFull,"<br>",
+                               med.ws)) %>%
+         add_trace(data = df, 
+                   y = ~StateFull, 
+                   x = ~mean.ws,
+                   type="scatter",
+                   mode="markers",
+                   marker = list(color = '#DB3069',
+                                 size= 16),
+                   name="Mean",
+                   hoverinfo="text",
+                   hoverlabel= list(bgcolor="#FFFFFF",
+                                    font=list(color="#000000")),
+                   text=~paste0(StateFull,"<br>",
+                                round(mean.ws,digits=2))) %>%
+         add_annotations(text="Pan down<br>for more",
+                         font=list(size=16),
+                         xref='paper',
+                         xanchor='center',
+                         yref='paper',
+                         yanchor='center',
+                         x=1.1,
+                         y=0.01,
+                         ax=0,
+                         ay=-50) %>%
+         layout(paper_bgcolor='transparent',
+                xaxis = x.axis,
+                yaxis = y.axis,
+                legend = lgd,
+                dragmode = "pan",
+                margin = list(b = 40, 
+                              l = 60, 
+                              r = 120, 
+                              t = 10, 
+                              pad = 0)) %>%
+         config(displaylogo = F,
+                collaborate = F,
+                modeBarButtonsToRemove=c('sendDataToCloud',
+                                         'zoom2d',
+                                         'select2d',
+                                         'lasso2d',
+                                         'zoomIn2d',
+                                         'zoomOut2d',
+                                         'autoScale2d',
+                                         'hoverClosestCartesian',
+                                         'hoverCompareCartesian',
+                                         'toggleSpikelines'))
+    
+    p  
+```
+
+<sup>1</sup>Windiest as defined by the "Typical Meteorological Year" (TMY) drawn from years 1976-2005. 
+<br>
+Source: <a href="https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/">National Solar Radiation Data Base</a>
+<br>
+<br>
+Back to <a href="https://www.slacey.net">slacey.net</a>
